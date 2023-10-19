@@ -10,22 +10,24 @@ namespace LDM {
         
     private:
         unique_ptr<map<T, shared_ptr<set<T>>>> map_;
+        u64 clasters_;
 
     public:
 
-        inline LDM() {
+        inline LDM() : clasters_(0) {
             map_.reset(new map<T, shared_ptr<set<T>>>());
         }
 
-        LDM(const LDM<T> & value) {
+        LDM(const LDM<T> & value) : clasters_(value.clasters_) {
             for (auto& [key, ptr] : *value.map_)
                 (*map_)[key].reset(new set<T>(*ptr));
         }
 
-        LDM(LDM<T> && value) : map_(std::move(value.map_)) {}
+        LDM(LDM<T> && value) : map_(std::move(value.map_)), clasters_(value.clasters_) {}
         
         ~LDM() {
             clear();
+            map_.reset();
         }
 
         const shared_ptr<set<T>> & operator[] (const T & index) const { return (*map_)[index]; }
@@ -33,7 +35,7 @@ namespace LDM {
         const shared_ptr<set<T>> & at (const T & index) const { return map_->at(index); }
 
         void add_linked(const T & first, const T & second) {
-            auto data = *map_;
+            auto& data = *map_;
 
             bool cont_first = data.contains(first);
             bool cont_second = data.contains(second);
@@ -44,6 +46,7 @@ namespace LDM {
                 data[first]->insert(first);
                 data[second] = data[first];
                 data[first]->insert(second);
+                ++clasters_;
                 return;
             }
 
@@ -62,6 +65,8 @@ namespace LDM {
 
             // Merging clasters
             if (cont_first and cont_second) {
+                if (data[first] == data[second]) return;
+
                 // Find smaller claster
                 bool first_smaller = data[first]->size() < data[second]->size();
                 shared_ptr<set<T>> claster = first_smaller ? data[first] : data[second];
@@ -75,11 +80,12 @@ namespace LDM {
                     data[key] = data[bigger_key];
 
                 claster.reset();
+                --clasters_;
             }
         }
 
         void remove_linked(const T & value) {
-            auto data = *map_;
+            auto& data = *map_;
 
             if (not data.contains(value)) return;
 
@@ -89,6 +95,7 @@ namespace LDM {
                 for (auto& key : *claster)
                     data.erase(data.find(key));
                 claster.reset();
+                --clasters_;
                 return;
             }
 
@@ -108,16 +115,18 @@ namespace LDM {
         }
 
         bool are_linked(const T & first, const T & second) const {
-            auto data = *map_;
+            auto& data = *map_;
 
             if (not data.contains(first) or not data.contains(second))
                 return false;
             return data[first] == data[second];
         }
 
-        void clear() { map_.reset(); }
+        void clear() { clasters_ = 0; map_.reset(new map<T, shared_ptr<set<T>>>()); }
 
         bool empty() const { return map_->empty(); }
+
+        u64 get_clasters() const { return clasters_; }
     };
 
 }

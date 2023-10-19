@@ -86,4 +86,4 @@ map = {
 
 * **Are linked (A and B)** If they are in the same *claster*, then returns *True*. Otherwise returns *False*.  
 
-    **Complexity: O(1)**
+    **Complexity: O(log(N))**

@@ -7,6 +7,7 @@
 using std::string;
 
 #include "gtest/gtest.h"
+#include "benchmark/benchmark.h"
 #include "linked_data_map.hpp"
 
 namespace LDM {

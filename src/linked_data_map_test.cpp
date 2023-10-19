@@ -54,5 +54,64 @@ namespace LDM::LDMTests {
         ASSERT_EQ(map_->size(), 0);
     }
 
+    static void BM_Standard(benchmark::State& state) {
+        auto map_ = LDM<u64>();
+        for (auto _ : state)
+        {
+            u64 i = 1;
+            for (; i < 1000000; ++i)
+                map_.add_linked(i - 1, i);
+            for (; i > 0; --i)
+                map_.remove_linked(i);
+        }
+    }
+    BENCHMARK(BM_Standard);
+
+    static void BM_ManyClasters(benchmark::State& state) {
+        auto map_ = LDM<u64>();
+        for (auto _ : state)
+        {
+            u64 i = 1;
+            for (; i < 1000000; i += 2)
+                map_.add_linked(i - 1, i);
+            for (; i > 0; --i)
+                map_.remove_linked(i);
+        }
+    }
+    BENCHMARK(BM_ManyClasters);
+
+    static void BM_MergeClasters(benchmark::State& state) {
+        auto map_ = LDM<u64>();
+        for (auto _ : state)
+        {
+            u64 i = 1;
+            for (; i < 500000; i += 2) {
+                map_.add_linked(i - 1, i);
+                if (i > 1) map_.add_linked(i - 2, i);
+            }
+            for (; i > 0; --i)
+                map_.remove_linked(i);
+        }
+    }
+    BENCHMARK(BM_MergeClasters);
+
+    static void BM_Clear(benchmark::State& state) {
+        auto map_ = LDM<u64>();
+        for (auto _ : state)
+        {
+            u64 i = 1;
+            for (; i < 1000000; ++i)
+                map_.add_linked(i - 1, i);
+            map_.clear();
+        }
+    }
+    BENCHMARK(BM_Clear);
+
+    TEST(LDMTestBM, Benchmarks)
+    {
+        benchmark::RunSpecifiedBenchmarks();
+        benchmark::Shutdown(); 
+    }
+
 }
 

@@ -111,7 +111,7 @@ namespace LDM {
         
         u64 count_linked(const T & value) const {
             if (not map_->contains(value)) return 0;
-            return (*map_)[value]->size();
+            return (*map_)[value]->size() - 1;
         }
 
         bool are_linked(const T & first, const T & second) const {
